@@ -1,56 +1,42 @@
-# kafka-long-running-jobs
+# Consommateur Kafka - Tâches longues
 
-This repo contains examples of dealing with long-running jobs using Spring and Apache Kafka. Its purpose purely informative to give developers an idea of the different approaches to take.
+Ce référentiel contient des exemples de gestion de tâches de longue durée à l'aide de Spring et Apache Kafka.
 
-The project has 5 submodules, each independent of one another so that all information needed can be found by looking at a single module. Note that this does mean that there is duplicate code across modules, however as its purpose is to show how to tackle the problem I found it easier if you only had to look in a single module instead of navigating all over the repo.
+Le projet comporte 5 sous-modules, chacun indépendant les uns des autres afin que toutes les informations nécessaires puissent être trouvées en consultant un seul module.
 
-All the submodules have (mostly) the same classes:
+Tous les sous-modules ont les mêmes classes :
 
-- Application: main class to start the module
-- Consumer: the kafka consumer that consumes the event and starts the long-running job
-- Controller: contains an endpoint to call which produces an event (which is consumed by the consumer)
-  - A postman collection (kafka-long-running-jobs.postman_collection.json) has been added with all endpoint calls
-- LongRunningJob: a simulation of a long-running job, performs a thread.sleep of 10 minutes
-
-Furthermore, the configurations needed for the different approaches are in the resources/application.yaml
-
-Below you can find a summary of the 5 submodules. For a more detailed explanation on the issue and all of the solution I would like to refer to my blog on the subject: TODO
+- Application : classe principale pour démarrer le module
+- Consommateur : le consommateur kafka qui consomme l'événement et démarre le travail de longue durée
+- Contrôleur : contient un point final à appeler qui produit un événement (qui est consommé par le consommateur)
+- Une collection postman (kafka-long-running-jobs.postman_collection.json) a été ajoutée avec tous les appels de point de terminaison
+- LongRunningJob : une simulation d'un travail de longue durée, effectue un thread.sleep de 10 minutes
 
 ## Module: microprocesses
 
-This module shows how splitting a job into multiple shorter-running microprocesses would work. Of course all processes are fictional (as in they're just thread.sleeps), but flow wise this is how it would work.
-
-This module relates to the section _Split the job into microprocesses_ in the blog.
+Ce module montre comment fonctionnerait la division d'une tâche en plusieurs microprocessus à exécution plus courte.
 
 ## Module: not-async
 
-This module has nothing async to it. It exists for the sake of showing what the default behaviour is (spoiler alert: the consumer leaves the group)
-
-This module relates to the section _Problem_ in the blog. note that it also contains the configurations mentioned in section _Increase the timeout_.
+Ce module focntionne de manière synchrone. Il décrit le comportement par défaut lorsqu'un consommateur Kafka quitte le groupe auquel il appartient avant d'avoit terminé sa tâche de travail.
 
 ## Module: spring-async
 
-The most straightforward approach, add an @Async annotation to the long-running job so that it will be executed on a separate thread.
+L'approche la plus simple consiste à ajouter une annotation @Async au travail de longue durée afin qu'il soit exécuté sur un thread séparé.
 
-- Pro: easy to set up, if resources (CPU usage/memory) aren't an issue than this approach works well since it will handle multiple events concurrently
-- Con: if the long-running job is resource intensive the concurrency can become a bottleneck (too much CPU usage, OOM issues etc.). Also, since it's a fire-and-forget approach, retries and kafka error handlers require more work
-
-This module relates to the section _Fire-and-forget threading_ in the blog.
+- Avantage : facile à configurer, si les ressources (utilisation du processeur/mémoire) ne sont pas un problème, cette approche fonctionne bien car elle gérera plusieurs événements simultanément.
+- Inconvénient : si le travail de longue durée est gourmand en ressources, la concurrence peut devenir un goulot d'étranglement (utilisation excessive du processeur, problèmes de MOO, etc.). .
 
 ## Module: pause-container
 
-Uses the KafkaListenerEndpointRegistry to get the listener container (spring container that contains the consumer) to pause and resume the consumer.
+Utilise KafkaListenerEndpointRegistry pour que le conteneur d'écoute (conteneur Spring qui contient le consommateur) mette en pause et reprenne le consommateur.
 
-- Pro: more control over success and error callbacks and thus error handling
-- Con: requires more effort than the spring-async approach.
-
-This module relates to the section _Pause consumer with threading and callbacks_ in the blog.
+- Avantage : plus de contrôle sur la gestion des erreurs
+- Inconvénient : nécessite plus d'efforts que l'approche spring-async.
 
 ## Module: pause-container-with-acknowledge
 
-Same as the previous one except that it has auto-commit disabled and uses the Acknowledge object to acknowledge the event (and commit).
+Identique l'exemple précédent mais avec une validation automatique désactivée.
 
-- Pro: More control, and the ability to not acknowledge events when an error occurs
-- Con: More effort than the two approaches above, also don't forget to acknowledge
-
-This module relates to the section _Pause consumer with threading and callbacks_ in combination with the sections _Limit number of events consumed per poll_ and _Use manual commits_ in the blog.
+- Avantage : Plus de contrôle et la possibilité de ne pas reconnaître les événements lorsqu'une erreur se produit
+- Inconvénient : Plus d'effort de programmation que pour les approches précédentes.
