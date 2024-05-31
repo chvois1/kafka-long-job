@@ -17,6 +17,7 @@ Furthermore, the configurations needed for the different approaches are in the r
 Below you can find a summary of the 5 submodules. For a more detailed explanation on the issue and all of the solution I would like to refer to my blog on the subject: TODO
 
 ## Module: microprocesses
+
 This module shows how splitting a job into multiple shorter-running microprocesses would work. Of course all processes are fictional (as in they're just thread.sleeps), but flow wise this is how it would work.
 
 This module relates to the section _Split the job into microprocesses_ in the blog.
